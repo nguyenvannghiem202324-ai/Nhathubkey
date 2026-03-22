@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NHẬT HUB V16 - GET KEY 24H</title>
+    <style>
+        body { background: #0a0a0a; color: cyan; font-family: sans-serif; text-align: center; padding-top: 50px; }
+        .key-box { border: 2px solid cyan; padding: 20px; display: inline-block; font-size: 24px; border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <h1>KEY CỦA NGÀY HÔM NAY:</h1>
+    <div class="key-box" id="daily-key">Đang tính toán...</div>
+    <script>
+        function generateKey() {
+            const date = new Date();
+            const d = date.getUTCDate().toString().padStart(2, '0');
+            const m = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+            const y = date.getUTCFullYear().toString();
+            const seed = d + m + y + "NhatHubV16"; // Phải trùng với Secret trong Script Roblox
+            let hash = 0;
+            for (let i = 0; i < seed.length; i++) {
+                hash = (hash * 31 + seed.charCodeAt(i)) % 100000000;
+            }
+            document.getElementById('daily-key').innerText = "NHAT-" + hash;
+        }
+        generateKey();
+    </script>
+</body>
+</html>
