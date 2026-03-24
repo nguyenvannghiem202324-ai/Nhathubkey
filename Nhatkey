@@ -1,0 +1,193 @@
+-- [[ NHẬT HUB V9 - FULL KEY SYSTEM + COSMIC UI ]]
+-- Cấu hình KeyAuth của bạn
+local KeyAuth_Settings = {
+    name = "Ứng dụng của Bnh118721",
+    ownerid = "cZfdumEifX",
+    version = "1.0"
+}
+
+-- 1. TẢI THƯ VIỆN HỖ TRỢ (FIX CHO MOBILE)
+local HttpService = game:GetService("HttpService")
+local KeyAuth = loadstring(game:HttpGet("https://raw.githubusercontent.com/KeyAuth/KeyAuth-Roblox-Lib/main/main.lua"))()
+local KeyAuthApp = KeyAuth:new(KeyAuth_Settings.name, KeyAuth_Settings.ownerid, KeyAuth_Settings.version)
+
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui") 
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local VirtualUser = game:GetService("VirtualUser")
+local LocalPlayer = Players.LocalPlayer
+
+-- Hàm lưu/đọc Key vào máy (để không phải nhập lại mỗi lần mở)
+local function SaveKey(key) writefile("NhatHub_SavedKey.txt", key) end
+local function ReadKey() return isfile("NhatHub_SavedKey.txt") and readfile("NhatHub_SavedKey.txt") or "" end
+
+-- ===================== GIAO DIỆN NHẬP KEY (KEY SYSTEM) =====================
+local KeyGui = Instance.new("ScreenGui", CoreGui)
+KeyGui.Name = "NhatHub_KeyAuth"
+
+local KeyFrame = Instance.new("Frame", KeyGui)
+KeyFrame.Size = UDim2.new(0, 360, 0, 220)
+KeyFrame.Position = UDim2.new(0.5, -180, 0.5, -110)
+KeyFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 25)
+Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 15)
+local KStroke = Instance.new("UIStroke", KeyFrame)
+KStroke.Color = Color3.fromRGB(0, 255, 255)
+KStroke.Thickness = 2
+
+local KTitle = Instance.new("TextLabel", KeyFrame)
+KTitle.Size = UDim2.new(1, 0, 0, 50)
+KTitle.Text = "NHẬT HUB - KEY SYSTEM"
+KTitle.TextColor3 = Color3.fromRGB(0, 255, 255)
+KTitle.Font = Enum.Font.GothamBold
+KTitle.BackgroundTransparency = 1
+KTitle.TextSize = 20
+
+local KeyInput = Instance.new("TextBox", KeyFrame)
+KeyInput.Size = UDim2.new(0, 300, 0, 45)
+KeyInput.Position = UDim2.new(0.5, -150, 0.35, 0)
+KeyInput.PlaceholderText = "Nhập Key tại đây..."
+KeyInput.Text = ReadKey()
+KeyInput.BackgroundColor3 = Color3.fromRGB(20, 20, 40)
+KeyInput.TextColor3 = Color3.white
+Instance.new("UICorner", KeyInput)
+
+local SubmitBtn = Instance.new("TextButton", KeyFrame)
+SubmitBtn.Size = UDim2.new(0, 140, 0, 40)
+SubmitBtn.Position = UDim2.new(0.08, 0, 0.7, 0)
+SubmitBtn.Text = "XÁC THỰC"
+SubmitBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 180)
+SubmitBtn.TextColor3 = Color3.white
+Instance.new("UICorner", SubmitBtn)
+
+local GetKeyBtn = Instance.new("TextButton", KeyFrame)
+GetKeyBtn.Size = UDim2.new(0, 140, 0, 40)
+GetKeyBtn.Position = UDim2.new(0.52, 0, 0.7, 0)
+GetKeyBtn.Text = "LẤY KEY (24H)"
+GetKeyBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 255)
+GetKeyBtn.TextColor3 = Color3.white
+Instance.new("UICorner", GetKeyBtn)
+
+-- ===================== LOGIC XỬ LÝ CHÍNH (NHẬT HUB V9) =====================
+local function StartNhatHubV9()
+    -- BẢNG CÀI ĐẶT TRẠNG THÁI
+    local Settings = {
+        ESP = false, Hitbox = false, SpeedHack = false,
+        SpeedValue = 150, AutoKillV1 = false, FastKillV2 = false,
+        KillRange = 70, HeightOffset = 4, AttackSpam = 10
+    }
+
+    if CoreGui:FindFirstChild("NhatHub_CosmicUI") then CoreGui:FindFirstChild("NhatHub_CosmicUI"):Destroy() end
+
+    local ScreenGui = Instance.new("ScreenGui", CoreGui)
+    ScreenGui.Name = "NhatHub_CosmicUI"
+    local ESP_Folder = Instance.new("Folder", ScreenGui)
+    local Boxes = {}
+
+    local MainFrame = Instance.new("Frame", ScreenGui)
+    MainFrame.Name = "MainFrame"
+    MainFrame.Size = UDim2.new(0, 480, 0, 320)
+    MainFrame.Position = UDim2.new(0.5, -240, 0.5, -160)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 30)
+    MainFrame.BackgroundTransparency = 0.15
+    Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 15)
+    MainFrame.Active = true; MainFrame.Draggable = true
+
+    local MainGlow = Instance.new("UIStroke", MainFrame)
+    MainGlow.Thickness = 3; MainGlow.Color = Color3.fromRGB(0, 255, 255)
+
+    local Title = Instance.new("TextLabel", MainFrame)
+    Title.Size = UDim2.new(1, 0, 0, 60)
+    Title.Text = "— NHẬT HUB V9 —"
+    Title.TextColor3 = Color3.fromRGB(0, 255, 255)
+    Title.Font = Enum.Font.GothamBlack
+    Title.TextSize = 28
+    Title.BackgroundTransparency = 1
+
+    -- Hàm tạo nút Cosmic
+    local function CreateCosmicButton(name, pos, color, settingKey)
+        local Button = Instance.new("TextButton", MainFrame)
+        Button.Size = UDim2.new(0, 200, 0, 45); Button.Position = pos
+        Button.BackgroundColor3 = Color3.fromRGB(20, 20, 40)
+        Button.Font = Enum.Font.GothamMedium; Button.TextSize = 16
+        Instance.new("UICorner", Button).CornerRadius = UDim.new(0, 10)
+        local Glow = Instance.new("UIStroke", Button); Glow.Thickness = 2
+
+        local function UpdateVisuals()
+            local isOn = Settings[settingKey]
+            Button.Text = name .. (isOn and " [ON]" or " [OFF]")
+            Button.TextColor3 = isOn and color or Color3.fromRGB(150, 150, 150)
+            Glow.Color = isOn and color or Color3.fromRGB(50, 50, 70)
+        end
+        UpdateVisuals()
+        Button.MouseButton1Click:Connect(function() Settings[settingKey] = not Settings[settingKey]; UpdateVisuals() end)
+    end
+
+    -- Khởi tạo nút
+    CreateCosmicButton("ESP 3D BOX", UDim2.new(0, 30, 0, 90), Color3.fromRGB(0, 255, 255), "ESP")
+    CreateCosmicButton("HITBOX 150", UDim2.new(0, 30, 0, 150), Color3.fromRGB(0, 255, 150), "Hitbox")
+    CreateCosmicButton("WARP SPEED", UDim2.new(0, 30, 0, 210), Color3.fromRGB(0, 150, 255), "SpeedHack")
+    CreateCosmicButton("TELE KILL V1", UDim2.new(1, -230, 0, 90), Color3.fromRGB(150, 0, 255), "AutoKillV1")
+    CreateCosmicButton("FAST KILL V2", UDim2.new(1, -230, 0, 150), Color3.fromRGB(100, 50, 255), "FastKillV2")
+
+    -- Logic chạy Hack
+    RunService.RenderStepped:Connect(function()
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("Humanoid") then
+            char.Humanoid.WalkSpeed = Settings.SpeedHack and Settings.SpeedValue or 16
+        end
+        
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = p.Character.HumanoidRootPart
+                -- ESP
+                if Settings.ESP and p.Character.Humanoid.Health > 0 then
+                    if not Boxes[p] then 
+                        local b = Instance.new("BoxHandleAdornment", ESP_Folder)
+                        b.Size = Vector3.new(4, 6, 4); b.Color3 = Color3.fromRGB(0, 255, 255)
+                        b.AlwaysOnTop = true; b.ZIndex = 10; b.Transparency = 0.7; Boxes[p] = b
+                    end
+                    Boxes[p].Adornee = hrp
+                else if Boxes[p] then Boxes[p].Adornee = nil end end
+                -- Hitbox
+                if Settings.Hitbox then
+                    hrp.Size = Vector3.new(150, 150, 150); hrp.Transparency = 0.8; hrp.CanCollide = false
+                else
+                    hrp.Size = Vector3.new(2, 2, 1); hrp.Transparency = 0; hrp.CanCollide = true
+                end
+            end
+        end
+    end)
+    print("NHẬT HUB V9 ĐÃ SẴN SÀNG!")
+end
+
+-- ===================== KẾT NỐI NÚT BẤM KEY =====================
+GetKeyBtn.MouseButton1Click:Connect(function()
+    local hwid = game:GetService("RbxAnalyticsService"):GetClientId()
+    -- Thay link bên dưới bằng link Linkvertise của anh
+    setclipboard("https://linkvertise.com/xxxx/nhat-hub-key-system?hwid=" .. hwid)
+    KTitle.Text = "ĐÃ COPY LINK LẤY KEY!"
+    task.wait(2)
+    KTitle.Text = "NHẬT HUB - KEY SYSTEM"
+end)
+
+SubmitBtn.MouseButton1Click:Connect(function()
+    KTitle.Text = "ĐANG KIỂM TRA..."
+    local key = KeyInput.Text
+    local response = KeyAuthApp:license(key)
+    
+    if response.success then
+        KTitle.Text = "THÀNH CÔNG!"
+        SaveKey(key)
+        task.wait(1)
+        KeyGui:Destroy()
+        StartNhatHubV9() -- Chạy script chính của anh
+    else
+        KTitle.Text = "KEY SAI HOẶC HẾT HẠN!"
+        KTitle.TextColor3 = Color3.fromRGB(255, 0, 0)
+        task.wait(2)
+        KTitle.TextColor3 = Color3.fromRGB(0, 255, 255)
+        KTitle.Text = "NHẬT HUB - KEY SYSTEM"
+    end
+end)
