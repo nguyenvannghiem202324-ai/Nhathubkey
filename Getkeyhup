@@ -1,0 +1,72 @@
+const express = require('express');
+const crypto = require('crypto');
+const path = require('path');
+const app = express();
+
+app.use(express.json());
+app.use(express.static('public')); // Thư mục chứa giao diện web
+
+// === CẤU HÌNH BẢO MẬT CỦA RIÊNG BẠN ===
+const MY_SERVICE = "NhatHubService";
+const MY_SECRET = "Vannhat@2026"; // Secret code để chỉ bạn mới tạo được key
+
+// Database lưu trữ key (Lưu trên RAM, nếu server reset sẽ mất key)
+const keysDatabase = {};
+
+// 1. API: Admin tạo Key Gift
+app.post('/api/admin/generate', (req, res) => {
+    const { service, secret, durationHours } = req.body;
+
+    // Kiểm tra Service và Secret
+    if (service !== MY_SERVICE || secret !== MY_SECRET) {
+        return res.status(401).json({ success: false, message: "Sai Service hoặc Secret. Cảnh báo xâm nhập!" });
+    }
+
+    if (!durationHours || durationHours <= 0) {
+        return res.status(400).json({ success: false, message: "Thời gian không hợp lệ!" });
+    }
+
+    // Tạo Key ngẫu nhiên
+    const newKey = "NHATHUB_" + crypto.randomBytes(4).toString('hex').toUpperCase();
+    
+    // Tính toán thời gian hết hạn
+    const expireTime = Date.now() + (durationHours * 60 * 60 * 1000);
+
+    // Lưu vào hệ thống
+    keysDatabase[newKey] = {
+        hwid: null,
+        expires: expireTime
+    };
+
+    res.json({ success: true, key: newKey, expires_in: durationHours });
+});
+
+// 2. API: Script Roblox kiểm tra Key
+app.get('/api/verify', (req, res) => {
+    const { key, hwid } = req.query;
+
+    if (!key || !hwid) return res.status(400).json({ success: false, message: "Thiếu thông tin!" });
+
+    const keyData = keysDatabase[key];
+
+    if (!keyData) return res.json({ success: false, message: "Key không tồn tại!" });
+    
+    if (Date.now() > keyData.expires) {
+        delete keysDatabase[key];
+        return res.json({ success: false, message: "Key đã hết hạn!" });
+    }
+
+    if (keyData.hwid === null) keyData.hwid = hwid; // Gắn HWID
+
+    if (keyData.hwid !== hwid) {
+        return res.json({ success: false, message: "Key này đang được dùng ở máy khác (Sai HWID)!" });
+    }
+
+    res.json({ success: true, message: "Xác thực Nhật HUB thành công!" });
+});
+
+// Chạy server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server Nhật HUB chạy tại http://localhost:${PORT}`);
+});
