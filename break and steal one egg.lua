@@ -53,6 +53,49 @@ local TEXT = Color3.fromRGB(240, 246, 255)
 local MUTED = Color3.fromRGB(142, 158, 184)
 local GREEN = Color3.fromRGB(73, 226, 153)
 local RED = Color3.fromRGB(255, 94, 116)
+local gui -- Forward declaration so activation can destroy the key UI.
+
+local function notify(message)
+    message = tostring(message)
+    pcall(function()
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "NHAT HUB | GETKEY",
+            Text = message,
+            Duration = 4
+        })
+    end)
+    warn("[NHAT HUB | GETKEY] " .. message)
+end
+
+-- Only called after PlatoBoost explicitly confirms the key is valid.
+local MAIN_SCRIPT_URLS = {
+    "https://raw.githubusercontent.com/nguyenvannghiem202324-ai/Script/refs/heads/main/script",
+    "https://raw.githubusercontent.com/nguyenvannghiem202324-ai/NhatHub/refs/heads/main/Okok"
+}
+
+local function activateMainScripts()
+    -- Remove the key interface before launching the main scripts.
+    if gui and gui.Parent then
+        gui:Destroy()
+    end
+
+    -- Load in order; a failure in one script will not block the next.
+    for index, url in ipairs(MAIN_SCRIPT_URLS) do
+        local ok, err = pcall(function()
+            local response = game:HttpGet(url)
+            local loader, compileError = loadstring(response)
+            if not loader then
+                error(compileError or "Could not compile downloaded script")
+            end
+            loader()
+        end)
+
+        if not ok then
+            warn(("[NHAT HUB] Script %d failed to load: %s"):format(index, tostring(err)))
+            notify(("Script %d failed to load. Check the URL or executor permissions."):format(index))
+        end
+    end
+end
 
 local function requestJSON(options)
     local ok, response = pcall(function() return fRequest(options) end)
@@ -151,7 +194,7 @@ end
 
 -- Remove duplicate UI on re-execution
 pcall(function() playerGui:FindFirstChild("NHAT_Platoboost_KeyUI"):Destroy() end)
-local gui = Instance.new("ScreenGui")
+gui = Instance.new("ScreenGui")
 gui.Name = "NHAT_Platoboost_KeyUI"
 gui.ResetOnSpawn = false
 gui.IgnoreGuiInset = true
@@ -266,8 +309,9 @@ local function runVerify(key, automatic)
             end
             setStatus("KEY VALID  •  ACCESS GRANTED", true)
             verifyButton.Text = "✓  KEY VERIFIED"
-            notify("Key verified successfully!")
-            -- Hook your main script activation here if this file is combined with it.
+            notify("Key verified successfully. Activating NHAT HUB...")
+            task.wait(0.35)
+            activateMainScripts()
         else
             local message = ok and (reason or "Key rejected.") or tostring(valid)
             setStatus("VERIFICATION FAILED", false)
